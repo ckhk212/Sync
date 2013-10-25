@@ -69,11 +69,12 @@ name = VALUES(name),
 professor_email = VALUES(professor_email),
 last_updated = VALUES(last_updated)";
 $sync->mysql_insert($result,$sql);
-// if ($return = $sync->mysql_insert($result,$sql)){
-  // $delete_old_courses = "DELETE FROM org_courses WHERE last_updated < '".$time_stamp ."'";
-  // $sync->mysql_query($delete_old_courses);
-  // printf("Courses older than %s are deleted from org_courses\n", $time_stamp);
-// }
+/*
+INSERT INTO table2 (column1, column2, column3)
+SELECT column1, 'no', column3 FROM table2 WHERE column2 = 'yes'
+
+this could be the patch solution for missing professor email on TUT 
+*/
 unset($data);
 
 ?>
