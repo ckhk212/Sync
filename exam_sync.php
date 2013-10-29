@@ -1,7 +1,8 @@
 <?php
 require 'SyncObject.php';
 $sync = new SyncObject();
-define ("EXIST_EXAM", "ventus_professor_exam_requests"); /* existing table name */
+define ("EXIST_EXAM_TABLE", "ventus_professor_exam_requests"); /* existing exam table name */
+define ("EXAM_ID", "exam_request_id"); /* existing exam table id */
 
 $table_names = array("TEST_ventus_professor_exam_requests");
 // $table_names = array("faculties", "departments", "programs", "courses",  "students", "student-courses");
@@ -26,35 +27,14 @@ $table_names = array("TEST_ventus_professor_exam_requests");
 foreach ($table_names as $name){
 
 	/* Query to find entries that are not exisit in ventus table */
-	$sql="SELECT 
-	`session`,
-	`course_code` ,
-	`course_section`,
-	`exam_type`,
-	`exam_date`,
-	`exam_duration`,
-	`exam_alternate_special`,
-	`exam_alternate_special_student`,
-	`contact_name`,
-	`contact_number`,
-	`requestor_email`,
-	`confirmation_key`,
-	`is_confirmed`,
-	`prof_filled_control_sheet`,
-	`documents_received`,
-	`imported_automatically`,
-	`inserted_on`,
-	`updated_on`,
-	`updated_by`
-	FROM ".$name." new WHERE NOT EXISTS (SELECT * FROM ".EXIST_EXAM.") old WHERE 
-	new.session = old.session AND
-	new.course_code = old.course_code AND
-	new.course_section = old.course_section AND
-	new.exam_type = old.exam_type AND
-	(new.exam_date != old.exam_date OR
-		new.exam_duration != old.exam_duration) AND
-new.imported_automatically = old.imported_automatically
-)";
+	$sql="SELECT * FROM `TEST_ventus_professor_exam_requests` new WHERE NOT EXISTS (SELECT * FROM ventus_professor_exam_requests old WHERE 
+		new.session = old.session AND
+		new.course_code = old.course_code AND
+		new.course_section = old.course_section AND
+		new.exam_type = old.exam_type)";
+$result = $sync->mysql_query($sql);
+printf("insertion");
+var_dump($result);
 
 /* for update only */
 $sql = "SELECT new.* FROM TEST_ventus_professor_exam_requests new
@@ -69,60 +49,21 @@ WHERE
 new.exam_date != old.exam_date 
 OR new.exam_duration != old.exam_duration";
 
-$new_result = $sync->mysql_query($sql);
-var_dump($new_result);
-exit();
+$result = $sync->mysql_query($sql);
+printf("update");
+var_dump($result);
 
-/* check ratehr if the data exist in the ventus table */
-if(mysqli_num_rows($new_result) > 0){
-	$sql= "SELECT exam_request_id FROM ".EXIST_EXAM." 
-	WHERE 
-	session = $new_result[session] AND
-	course_code = $new_result[course_code] = old.course_code AND
-	course_section = $new_result[course_section] AND
-	exam_type = $new_result[exam_type] AND
-	imported_automatically = $new_result[imported_automatically]";
-	echo "I AM HERE";
-	$new_result = $sync->mysql_query($sql);
+/* for delete only */
+$sql = "SELECT * FROM `ventus_professor_exam_requests` old WHERE NOT EXISTS (SELECT * FROM TEST_ventus_professor_exam_requests new WHERE 
+	new.session = old.session AND
+	new.course_code = old.course_code AND
+	new.course_section = old.course_section AND
+	new.exam_type = old.exam_type) AND old.session='20139' AND exam_type='final' AND imported_automatically=1";
 
-
-}
-
-
-
+$result = $sync->mysql_query($sql);
+printf("delete");
+var_dump($result);
 exit(1);
-	/*
-	$sql = "SELECT
-	`session`,
-	`course_code` ,
-	`course_section`,
-	`exam_type`,
-	`exam_date`,
-	`exam_duration`,
-	`exam_alternate_special`,
-	`exam_alternate_special_student`,
-	`contact_name`,
-	`contact_number`,
-	`requestor_email`,
-	`confirmation_key`,
-	`is_confirmed`,
-	`prof_filled_control_sheet`,
-	`documents_received`,
-	`imported_automatically`,
-	`inserted_on`,
-	`updated_on`,
-	`updated_by`
-	FROM ventus_professor_exam_requests_copy";
-	$exist_result = $sync->mysql_query($sql);
-	*/
-
-	/**
-	*	drop the prvious backup tables
-	*/
-	// $sql = "DROP TABLE IF EXISTS `".$name."_".date('Y-m',strtotime('-1 month'))."`";
-	// $sync->mysql_query($sql);
-	// $sql = "DROP TABLE IF EXISTS `".$name."_".date('Y-m')."`";
-	// $sync->mysql_query($sql);
 
 	/**
 	*	create backup tables
@@ -145,5 +86,53 @@ exit(1);
 }
 
 echo "===================================== END ======================================\n\n";
+
+/*
+* send out emails when there are changes on the final exam tables
+*/
+function updateRequestDetails($id, $data){
+        //Before we make the update, let's fetch the existing information for this request so we can do a difference later
+	$sql = "SELECT exam_type, exam_date, exam_duration, course_code, course_section, session FROM ".EXIST_EXAM_TABLE." WHERE ".EXAM_ID." = ".$id."";
+	$data_before_update = $sync->mysql_query($data);
+
+        //Before we make an update and send an email, we should check if there was an update at all
+	if ($data_before_update['course_code'] != $data['course_code'] ||
+		$data_before_update['course_section'] != $data['course_section'] ||
+		$data_before_update['session'] != $data['session'] ||
+		$data_before_update['exam_type'] != $data['exam_type'] ||
+		$data_before_update['exam_date'] != $data['exam_date'] ||
+		$data_before_update['exam_duration'] != $data['exam_duration']){
+
+
+            //If there is any update made by the faculties, we want the exams team to be informed about this
+		require_once FS_PHP.'/swift/swift_required.php';
+	$transport = Swift_SmtpTransport::newInstance(SMTP_SERVER, SMTP_SERVER_PORT);
+	$mailer = Swift_Mailer::newInstance($transport);
+
+	$html = "<p>Hello Exams team,</p>";
+	$html .= "<p>This is an automated message to let you know that a faculty member has made a change to a notice of examination.</p>";
+
+	$html .= "<p><u>Old data for this request:</u></p>";
+	$html .= "<p>Course: ".$data_before_update[0]['course_code']." ".$data_before_update[0]['course_section']."<br>";
+	$html .= "Session: ".$data_before_update[0]['session']."<br>";
+	$html .= "Type: ".$data_before_update[0]['exam_type']."<br>";
+	$html .= "Exam: ".$data_before_update[0]['exam_date']." (".$data_before_update[0]['exam_duration']." minutes)</br>";
+	$html .= "Is alternate? ".$data_before_update[0]['exam_alternate_special']." (Student: ".($data_before_update[0]['exam_alternate_special_student'] == "" ? 'n/a' : $data_before_update[0]['exam_alternate_special_student']).")</p>";
+
+	$html .= "<p><u>New data for this request:</u></p>";
+	$html .= "<p>Course: ".$data['course_code']." ".$data['course_section']."<br>";
+	$html .= "Session: ".$data['session']."<br>";
+	$html .= "Type: ".$data['exam_type']."<br>";
+	$html .= "Exam: ".$data['exam_date']." (".$data['exam_duration']." minutes)</br>";
+	$html .= "Is alternate? ".$data['exam_alternate_special']." (Student: ".($data['exam_alternate_special_student'] == "" ? 'n/a' : $data['exam_alternate_special_student']).")</p>";
+
+	$message = Swift_Message::newInstance('Ventus NOE update') 
+	->setFrom(array('ventus' . EMAIL_ORG_STAFF_DOMAIN => 'ventus' . EMAIL_ORG_STAFF_DOMAIN))
+	->setTo(array(EMAIL_ALIAS_ACCESS_SERVICE_EXAMS . EMAIL_ORG_STAFF_DOMAIN => EMAIL_ALIAS_ACCESS_SERVICE_EXAMS . EMAIL_ORG_STAFF_DOMAIN))
+	->setBody($html, 'text/html', 'utf-8');
+
+	$mailer->send($message);
+}
+}
 
 ?>
