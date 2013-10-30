@@ -1,138 +1,102 @@
 <?php
 require 'SyncObject.php';
 $sync = new SyncObject();
-define ("EXIST_EXAM_TABLE", "ventus_professor_exam_requests"); /* existing exam table name */
-define ("EXAM_ID", "exam_request_id"); /* existing exam table id */
+define ("DB2_EXAM_TABLE", "org_exams");
+define ("VENTUS_EXAM_TABLE", "ventus_professor_exam_requests"); /* ventus exam table */
+define ("PROFESSOR_MODEL", 'https://sassit.uottawa.ca/apps/ventus/professor/models/professor.php'); /* professor model */
+define ("FACULTY_MODEL", 'https://sassit.uottawa.ca/apps/ventus/faculty/models/faculty.php'); /* faculty model */
 
-$table_names = array("TEST_ventus_professor_exam_requests");
-// $table_names = array("faculties", "departments", "programs", "courses",  "students", "student-courses");
-// $table_names = array("student_courses");
+$start = microtime(TRUE); 
+$mem_start = memory_get_usage(TRUE);
+require DB2_EXAM_TABLE.".php";
+printf("%s tb is loaded on %s \n", ucfirst(DB2_EXAM_TABLE), date('Y-m-d H:i:s'));
+printf("%s tb took %fs and consumed %fkb \n\n", ucfirst(DB2_EXAM_TABLE), microtime(TRUE)-$start, round((memory_get_usage(TRUE)-$mem_start)/1024.2));
+echo "=================================== PARTIAL END ================================\n\n";
 
-// foreach ($table_names as $name){
-// 	// $sync = new SyncObject();
-// 	$start = microtime(TRUE); 
-// 	$mem_start = memory_get_usage(TRUE);
-// 	require $name.".php";
-// 	printf("%s table is loaded on %s \n", ucfirst($name), date('Y-m-d H:i:s'));
-// 	printf("%s table took %fs and consumed %fkb \n\n", ucfirst($name), microtime(TRUE)-$start, round((memory_get_usage(TRUE)-$mem_start)/1024.2));
-// 	// $sync->close_connection();
-// 	unset($start, $mem_start);
-// }
-// echo "=================================== PARTIAL END ================================\n\n";
+/* create backup tbs */
+$sql = "RENAME TABLE `".DB2_EXAM_TABLE."` TO `".DB2_EXAM_TABLE."_".date('Y-m')."`";
 
-/**
-*	at this point, all org_*_temp tables are synced properly.
-*/
+/* check if backup create successfully, else revert changes	*/
+if($sync->mysql_query($sql)){
+	printf("%s tb is backup on %s\n", DB2_EXAM_TABLE, date('Y-m-d H:i:s'));
+	$sql = "RENAME TABLE `".DB2_EXAM_TABLE."_temp` TO `".DB2_EXAM_TABLE."`";
+	$sync->mysql_query($sql);
+	printf("%s tb is renamed on %s\n\n", DB2_EXAM_TABLE, date('Y-m-d H:i:s'));
+}else{
+	printf("%s tb did not backup porperly on %s\n", DB2_EXAM_TABLE, date('Y-m-d H:i:s'));
+	$sql = "RENAME TABLE `".DB2_EXAM_TABLE."_".date('Y-m')."` TO `".DB2_EXAM_TABLE."`";
+	$sync->mysql_query($sql);
+}
 
-foreach ($table_names as $name){
-
-	/* Query to find entries that are not exisit in ventus table */
-	$sql="SELECT * FROM `TEST_ventus_professor_exam_requests` new WHERE NOT EXISTS (SELECT * FROM ventus_professor_exam_requests old WHERE 
-		new.session = old.session AND
-		new.course_code = old.course_code AND
-		new.course_section = old.course_section AND
-		new.exam_type = old.exam_type)";
+/* Query to find entries that are not exisit on VENTUS_EXAM_TABLE */
+$sql="SELECT `session`, `course_code`, `course_section`, `exam_type`, `exam_date`, `exam_duration`, `exam_alternate_special`, `exam_alternate_special_student`, 
+`contact_name`, `contact_number`, `requestor_email`, `confirmation_key`, `is_confirmed`, `prof_filled_control_sheet`, `documents_received`, `imported_automatically`, 
+`inserted_on`
+FROM `".DB2_EXAM_TABLE."` new WHERE NOT EXISTS (SELECT * FROM `VENTUS_EXAM_TABLE` old WHERE 
+	new.session = old.session AND
+	new.course_code = old.course_code AND
+	new.course_section = old.course_section AND
+	new.exam_type = old.exam_type AND
+	new.deleted = 0 AND
+	new.imported_automatically = 1 )";
 $result = $sync->mysql_query($sql);
-printf("insertion");
-var_dump($result);
+/* insert into VENTUS_EXAM_TABLE if $result is found */
+if (is_array($result) && !is_object($result)){
+	$sql="INSERT INTO `VENTUS_EXAM_TABLE` (`session`, `course_code`, `course_section`, `exam_type`, `exam_date`, `exam_duration`, `exam_alternate_special`, `exam_alternate_special_student`, 
+		`contact_name`, `contact_number`, `requestor_email`, `confirmation_key`, `is_confirmed`, `prof_filled_control_sheet`, `documents_received`, `imported_automatically`, 
+		`inserted_on`, `updated_on`) VALUES {DATA}";
+$sync->mysql_insert($result,$sql);
+// reminderToAccessServiceStudents($data); /* send email to students */
+}
 
-/* for update only */
-$sql = "SELECT new.* FROM TEST_ventus_professor_exam_requests new
-LEFT JOIN ventus_professor_exam_requests old
+/* Query to find entries need update on VENTUS_EXAM_TABLE */
+$sql = "SELECT * FROM `".DB2_EXAM_TABLE."` new
+LEFT JOIN VENTUS_EXAM_TABLE old
 ON 
 new.session = old.session AND
 new.course_code = old.course_code AND
 new.course_section = old.course_section AND
 new.exam_type = old.exam_type AND
-new.imported_automatically = old.imported_automatically
+old.deleted = 0 AND
+old.imported_automatically = 1
 WHERE 
 new.exam_date != old.exam_date 
 OR new.exam_duration != old.exam_duration";
-
 $result = $sync->mysql_query($sql);
-printf("update");
-var_dump($result);
+/* update VENTUS_EXAM_TABLE entries if $result is found */
+if (is_array($result) && !is_object($result)){
+	foreach ($result as $row){
+		$sql="UPDATE `VENTUS_EXAM_TABLE` old SET old.exam_date='$row[exam_date]', old.exam_duration=$row[exam_duration], old.inserted_on='$row[inserted_on]'
+		WHERE old.session = '$row[session]' AND
+		old.course_code = '$row[course_code]' AND
+		old.course_section = '$row[course_section]' AND
+		old.exam_type = '$row[exam_type]' AND
+		old.imported_automatically = '$row[imported_automatically]'";
+		$sync->mysql_query($sql);
+		updateRequestDetails($row['exam_request_id'], $row);
+	}
+}
 
-/* for delete only */
-$sql = "SELECT * FROM `ventus_professor_exam_requests` old WHERE NOT EXISTS (SELECT * FROM TEST_ventus_professor_exam_requests new WHERE 
+/* Query to find entries need to be deleted on VENTUS_EXAM_TABLE */
+$sql = "SELECT * FROM `VENTUS_EXAM_TABLE` old WHERE NOT EXISTS (SELECT * FROM `".DB2_EXAM_TABLE."` new WHERE 
 	new.session = old.session AND
 	new.course_code = old.course_code AND
 	new.course_section = old.course_section AND
-	new.exam_type = old.exam_type) AND old.session='20139' AND exam_type='final' AND imported_automatically=1";
-
+	new.exam_type = old.exam_type) AND old.session='20139' AND old.exam_type='final' AND old.imported_automatically=1 AND old.deleted = 0";
 $result = $sync->mysql_query($sql);
-printf("delete");
-var_dump($result);
-exit(1);
-
-	/**
-	*	create backup tables
-	*/
-	$sql = "RENAME TABLE `".$name."` TO `".$name."_".date('Y-m')."`";
-
-	/**
-	*	check if backup create successfully, else revert changes.
-	*/
-	if($sync->mysql_query($sql)){
-		printf("%s table is backup on %s\n", $name, date('Y-m-d H:i:s'));
-		$sql = "RENAME TABLE `".$name."_temp` TO `".$name."`";
+/* delete VENTUS_EXAM_TABLE entries if $result is found */
+if (is_array($result) && !is_object($result)){
+	foreach ($result as $row){
+		$sql="UPDATE `VENTUS_EXAM_TABLE` old SET old.deleted=1
+		WHERE old.session = '$row[session]' AND
+		old.course_code = '$row[course_code]' AND
+		old.course_section = '$row[course_section]' AND
+		old.exam_type = '$row[exam_type]' AND
+		old.imported_automatically = '$row[imported_automatically]'";
 		$sync->mysql_query($sql);
-		printf("%s table is renamed on %s\n\n", $name, date('Y-m-d H:i:s'));
-	}else{
-		printf("%s table did not backup porperly on %s\n", $name, date('Y-m-d H:i:s'));
-		$sql = "RENAME TABLE `".$name."_".date('Y-m')."` TO `".$name."`";
-		$sync->mysql_query($sql);
+		deleteRequest($row['exam_request_id']);
 	}
 }
 
 echo "===================================== END ======================================\n\n";
-
-/*
-* send out emails when there are changes on the final exam tables
-*/
-function updateRequestDetails($id, $data){
-        //Before we make the update, let's fetch the existing information for this request so we can do a difference later
-	$sql = "SELECT exam_type, exam_date, exam_duration, course_code, course_section, session FROM ".EXIST_EXAM_TABLE." WHERE ".EXAM_ID." = ".$id."";
-	$data_before_update = $sync->mysql_query($data);
-
-        //Before we make an update and send an email, we should check if there was an update at all
-	if ($data_before_update['course_code'] != $data['course_code'] ||
-		$data_before_update['course_section'] != $data['course_section'] ||
-		$data_before_update['session'] != $data['session'] ||
-		$data_before_update['exam_type'] != $data['exam_type'] ||
-		$data_before_update['exam_date'] != $data['exam_date'] ||
-		$data_before_update['exam_duration'] != $data['exam_duration']){
-
-
-            //If there is any update made by the faculties, we want the exams team to be informed about this
-		require_once FS_PHP.'/swift/swift_required.php';
-	$transport = Swift_SmtpTransport::newInstance(SMTP_SERVER, SMTP_SERVER_PORT);
-	$mailer = Swift_Mailer::newInstance($transport);
-
-	$html = "<p>Hello Exams team,</p>";
-	$html .= "<p>This is an automated message to let you know that a faculty member has made a change to a notice of examination.</p>";
-
-	$html .= "<p><u>Old data for this request:</u></p>";
-	$html .= "<p>Course: ".$data_before_update[0]['course_code']." ".$data_before_update[0]['course_section']."<br>";
-	$html .= "Session: ".$data_before_update[0]['session']."<br>";
-	$html .= "Type: ".$data_before_update[0]['exam_type']."<br>";
-	$html .= "Exam: ".$data_before_update[0]['exam_date']." (".$data_before_update[0]['exam_duration']." minutes)</br>";
-	$html .= "Is alternate? ".$data_before_update[0]['exam_alternate_special']." (Student: ".($data_before_update[0]['exam_alternate_special_student'] == "" ? 'n/a' : $data_before_update[0]['exam_alternate_special_student']).")</p>";
-
-	$html .= "<p><u>New data for this request:</u></p>";
-	$html .= "<p>Course: ".$data['course_code']." ".$data['course_section']."<br>";
-	$html .= "Session: ".$data['session']."<br>";
-	$html .= "Type: ".$data['exam_type']."<br>";
-	$html .= "Exam: ".$data['exam_date']." (".$data['exam_duration']." minutes)</br>";
-	$html .= "Is alternate? ".$data['exam_alternate_special']." (Student: ".($data['exam_alternate_special_student'] == "" ? 'n/a' : $data['exam_alternate_special_student']).")</p>";
-
-	$message = Swift_Message::newInstance('Ventus NOE update') 
-	->setFrom(array('ventus' . EMAIL_ORG_STAFF_DOMAIN => 'ventus' . EMAIL_ORG_STAFF_DOMAIN))
-	->setTo(array(EMAIL_ALIAS_ACCESS_SERVICE_EXAMS . EMAIL_ORG_STAFF_DOMAIN => EMAIL_ALIAS_ACCESS_SERVICE_EXAMS . EMAIL_ORG_STAFF_DOMAIN))
-	->setBody($html, 'text/html', 'utf-8');
-
-	$mailer->send($message);
-}
-}
-
 ?>

@@ -104,6 +104,9 @@ class SyncObject{
 				*/
 				$sql = substr($sql, 0, -1);
 				$sql_query = str_replace("{DATA}", $sql, $query);
+				if (defined('DEBUG')) {
+					return $sql_query;
+				}
 				if ($result = $this->mysql->query($sql_query, MYSQLI_USE_RESULT)){
 					unset($sql, $sql_query, $inner_count);
 					$return = TRUE;

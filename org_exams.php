@@ -1,6 +1,4 @@
 <?php
-// require_once ('SyncObject.php');
-// $sync = new SyncObject();
 $db2_sql = "SELECT
 ACAD_ACT_CD,
 SESSION_CD,
@@ -10,13 +8,11 @@ EXAM_DT||' '||EXAM_START_TM AS EXAM_DATE
 FROM SISR.CURRENT_SESS_EXAM_SCHEDULE_V01 
 WHERE EXAM_LOCATION != 'takehome'";
 $result = $sync->db2_query($db2_sql);
-//var_dump($result);
-// exit();
-$sql ="DROP TABLE IF EXISTS `TEST_ventus_professor_exam_requests_temp`";
+$sql ="DROP TABLE IF EXISTS `".DB2_EXAM_TABLE."_temp`";
 
 $sync->mysql_query($sql);
 
-$sql = "CREATE TABLE `TEST_ventus_professor_exam_requests_temp` (
+$sql = "CREATE TABLE `".DB2_EXAM_TABLE."_temp` (
   `exam_request_id` int(11) NOT NULL AUTO_INCREMENT,
   `session` varchar(6) COLLATE utf8_unicode_ci NOT NULL,
   `course_code` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
@@ -37,25 +33,29 @@ $sql = "CREATE TABLE `TEST_ventus_professor_exam_requests_temp` (
   `inserted_on` datetime NOT NULL,
   `updated_on` datetime DEFAULT NULL,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY (`exam_request_id`)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Created by: Kelvin Chan\nPurpose: Test out the exam data from DB2'";
+  `cron_logged` tinyint(1) NOT NULL DEFAULT '0',
+  `deleted` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`exam_request_id`),
+  KEY `course_indentifier` (`session`,`course_code`,`course_section`)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
 
 $sync->mysql_query($sql);
 
 $sql = "INSERT INTO
-TEST_ventus_professor_exam_requests_temp (
+`".DB2_EXAM_TABLE."_temp` (
 	course_code,
 	session,
 	course_section,
 	exam_duration,
 	exam_date,
 	inserted_on
-)
+  )
 VALUES
 {DATA}";
 $sync->mysql_insert($result,$sql);
 
-$sql = "UPDATE TEST_ventus_professor_exam_requests_temp SET exam_type='final', exam_alternate_special='none', contact_name='REGISTRAR', requestor_email='examen@uottawa.ca', confirmation_key=CONCAT(SHA1(RAND()),SHA1(RAND())), is_confirmed=1, imported_automatically=1, updated_on=inserted_on";
+$sql = "UPDATE `".DB2_EXAM_TABLE."_temp` SET exam_type='final', exam_alternate_special='none', contact_name='REGISTRAR', requestor_email='examen@uottawa.ca', 
+confirmation_key=CONCAT(SHA1(RAND()),SHA1(RAND())), is_confirmed=1, imported_automatically=1, updated_on=inserted_on";
 $sync->mysql_query($sql);
 unset($result);
 ?>
