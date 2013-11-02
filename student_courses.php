@@ -24,11 +24,6 @@ FROM
 org_students_temp";
 $students = $sync->mysql_query($sql);
 
-/**
-* A public variable
-@var String stores current timestamp
-*/
-// $time_stamp = date("Y-m-d H:i:s");
 $sql = "DROP TABLE IF EXISTS `org_student_courses_temp`";
 
 $sync->mysql_query($sql);
@@ -59,12 +54,6 @@ course_id = VALUES(course_id),
 last_updated = VALUES(last_updated)";
 
  $sync->db2_query_rolling_insert($db2_sql, $mysql_template, 'prep');
-
-// if ($return = $sync->db2_query_rolling_insert($db2_sql, $mysql_template, 'prep')){
-	// $delete_old_student_courses = "DELETE FROM org_student_courses WHERE last_updated < '".$time_stamp ."'";
-	// $sync->mysql_query($delete_old_student_courses);
-	// printf("Student-courses older than %s are deleted from org_student_courses\n", $time_stamp);
-// }
 
 
 function prep($data) {

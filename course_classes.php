@@ -24,11 +24,6 @@ $courses = $sync->mysql_query($sql);
 
 $result = $sync->join_results($result, $courses, 'COURSE','code','course_id');
 
-/**
-* A public variable
-@var String stores current timestamp
-*/
-// $time_stamp = date("Y-m-d H:i:s");
 
 $sql = "DROP TABLE IF EXISTS `org_course_classes_temp`";
 
@@ -79,11 +74,6 @@ room_number = VALUES(room_number),
 teaching_method = VALUES(teaching_method), 
 last_updated = VALUES(last_updated)";
 $sync->mysql_insert($result,$sql);
-// if ($return = $sync->mysql_insert($result,$sql)){
-//   $delete_old_course_classes = "DELETE FROM org_course_classes WHERE last_updated < '".$time_stamp ."'";
-//   $sync->mysql_query($delete_old_course_classes);
-//   printf("Course-classes older than %s are deleted from org_course_classes\n", $time_stamp);
-// }
 unset($result);
 
 ?>

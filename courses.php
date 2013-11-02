@@ -22,11 +22,6 @@ SURNAME,
 SHORT_EMAIL";
 $result = $sync->db2_query($sql);
 
-/**
-* A public variable
-@var String stores current timestamp
-*/
-// $time_stamp = date("Y-m-d H:i:s");
 
 $sql = "DROP TABLE IF EXISTS `org_courses_temp`";
 

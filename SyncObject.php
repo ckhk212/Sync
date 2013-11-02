@@ -129,6 +129,9 @@ class SyncObject{
 
 	public function mysql_query($query){
 		if ($this->mysql->ping()){
+			if (defined('DEBUG')){
+				return $query;
+			}
 			if ($result = $this->mysql->query($query)){
 				if($result && $result->num_rows > 0) {	
 					$data = array();
