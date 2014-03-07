@@ -1,4 +1,7 @@
 <?php
+// @author Kelvin Chan
+// @date 2014-01-09
+// @purpose queries to fetch programs data from DB2, and insert into ventus DB
 
 $sql = "SELECT 
 MAX(SECOND_ORG_CD) AS SECOND_ORG_CD,
@@ -16,8 +19,6 @@ GROUP BY
 POST_CD";
 $result = $sync->db2_query($sql);
 
-
-
 $sql = "SELECT
 department_id,
 code
@@ -25,7 +26,7 @@ FROM
 org_departments_temp";
 $departments = $sync->mysql_query($sql);
 
-$result = $sync->join_results($result,$departments,'SECOND_ORG_CD','code','department_id');
+$result = $sync->join_results($result,$departments,'SECOND_ORG_CD','code','department_id', FALSE);
 
 unset($departments);
 
@@ -47,7 +48,6 @@ $sql = "CREATE TABLE `org_programs_temp` (
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
 
 $sync->mysql_query($sql);
-
 
 $sql = "INSERT INTO 
 org_programs_temp (
