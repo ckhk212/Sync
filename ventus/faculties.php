@@ -1,4 +1,7 @@
 <?php 
+// @author Kelvin Chan
+// @date 2014-01-09
+// @purpose queries to fetch faculties data from DB2, and insert into ventus DB
 
 $sql = "SELECT 
 FACULTY_ID,
