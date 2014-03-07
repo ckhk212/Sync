@@ -1,19 +1,19 @@
 <?php
-require 'SyncObject.php';
+// @author Kelvin Chan
+// @date 2014-01-09
+// @purpose controller for the org data synchronization with DB2
+
+require_once '/var/www/html/sass/sync/SyncObject.php';
 $sync = new SyncObject();
 
 $table_names = array("faculties", "departments", "programs", "courses", "course_classes", "students", "student_courses");
-// $table_names = array("faculties", "departments", "programs", "courses",  "students", "student-courses");
-// $table_names = array("student_courses");
 
 foreach ($table_names as $name){
-	// $sync = new SyncObject();
 	$start = microtime(TRUE); 
 	$mem_start = memory_get_usage(TRUE);
 	require $name.".php";
 	printf("%s table is loaded on %s \n", ucfirst($name), date('Y-m-d H:i:s'));
 	printf("%s table took %fs and consumed %fkb \n\n", ucfirst($name), microtime(TRUE)-$start, round((memory_get_usage(TRUE)-$mem_start)/1024.2));
-	// $sync->close_connection();
 	unset($start, $mem_start);
 }
 echo "=================================== PARTIAL END ================================\n\n";
