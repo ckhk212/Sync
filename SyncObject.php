@@ -1,5 +1,9 @@
 <?php
-require_once("../config.php");
+// @author Kelvin Chan
+// @date 2014-01-09
+// @purpose various abstract functions for models to interact with the database
+error_reporting( error_reporting() & ~E_NOTICE );
+require_once ('config.php');
 
 /**
 *	Constant Definition
@@ -25,11 +29,7 @@ class SyncObject{
 			if ($this->mysql->connect_errno) {
 				exit("mysqli connect failed: ".$this->mysql->connect_error."\n=================================== END ================================\n\n");
 			}
-			/**
-			*	If script execute through terminal, then set_chartset to utf8
-			*	Patch soluion for the French encoding issue.
-			*/
-			if (isset($_ENV['SSH_CLIENT'])){
+			if(!isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] !== '--cron'){
 				$this->mysql->set_charset('utf8');
 			}
 			break;
@@ -41,9 +41,9 @@ class SyncObject{
 		"PROTOCOL=TCPIP;" .
 		"UID=" . db2_username . ";" .
 		"PWD=" . db2_passwrod . ";";
-		// if (!($this->db2 = db2_connect($connection_string, '', ''))){
-		// 	exit("db2 onnect failed: ".db2_conn_errormsg()."\n=================================== END ================================\n\n");
-		// } 
+		if (!($this->db2 = db2_connect($connection_string, '', ''))){
+			exit("db2 onnect failed: ".db2_conn_errormsg()."\n=================================== END ================================\n\n");
+		} 
 	}
 
 
@@ -63,13 +63,15 @@ class SyncObject{
 
 	private function trim(&$data) {
 		if(is_array($data)) {
-			foreach($data as $key=>$value)
+			foreach($data as $key=>$value){
 				$data[$key] = $this->trim($value);
+			}
 			return $data;
-		} else 
-		return trim($data);
+		} else {
+			return trim($this->mysql->real_escape_string($data));
+		}
 
-	}
+	}  
 
 	public function mysql_insert($data, $query, $bulk_size=default_bulk_size) {
 		if ($this->mysql instanceof PDO) {
@@ -94,7 +96,7 @@ class SyncObject{
 				*/
 				while($inner_count < $bulk_size){
 					if ($iterator->current()){
-						$sql .= "('" . implode("','", str_replace("'", "\'", $iterator->current())) . "','" . date("Y-m-d H:i:s") . "'),";
+						$sql .= "('" . implode("','", $iterator->current()) . "','" . date("Y-m-d H:i:s") . "'),";
 					}
 					$iterator->next(); // increment iterator
 					++$inner_count;	// increment counter to check if it reaches $bulk_size
@@ -104,9 +106,7 @@ class SyncObject{
 				*/
 				$sql = substr($sql, 0, -1);
 				$sql_query = str_replace("{DATA}", $sql, $query);
-				if (defined('DEBUG')) {
-					return $sql_query;
-				}
+				if(defined('DEBUG')) var_dump($sql_query);
 				if ($result = $this->mysql->query($sql_query, MYSQLI_USE_RESULT)){
 					unset($sql, $sql_query, $inner_count);
 					$return = TRUE;
@@ -129,9 +129,6 @@ class SyncObject{
 
 	public function mysql_query($query){
 		if ($this->mysql->ping()){
-			if (defined('DEBUG')){
-				return $query;
-			}
 			if ($result = $this->mysql->query($query)){
 				if($result && $result->num_rows > 0) {	
 					$data = array();
@@ -205,4 +202,3 @@ class SyncObject{
 		return $this->mysql->close();
 	}
 }
-?>
