@@ -1,4 +1,8 @@
 <?php
+// @author Kelvin Chan
+// @date 2014-01-09
+// @purpose queries to fetch students data from DB2, and insert into ventus DB
+define('INCREMENT_SIZE', '100000');
 
 $sql = "DROP TABLE IF EXISTS `org_students_temp`";
 
@@ -39,7 +43,7 @@ $sql = "CREATE TABLE `org_students_temp` (
 
 $sync->mysql_query($sql);
 
-//Get a list of all possible faculties
+/* get a list of all possible faculties */
 $sql = "SELECT
 code,
 faculty_id
@@ -47,7 +51,7 @@ FROM
 org_faculties_temp";
 $faculties = $sync->mysql_query($sql);
 
-//Get a list of all possible programs
+/* get a list of all possible programs */
 $sql = "SELECT
 code,
 program_id
@@ -55,11 +59,14 @@ FROM
 org_programs_temp";
 $programs = $sync->mysql_query($sql);
 
+/* get current student size */
+$db2_sql = "SELECT MAX(STUDENT_ID) FROM SISR.STUDENT_PERSONAL";
+$numOfStudents = $sync->db2_query($db2_sql);
+$numOfStudents = $numOfStudents[0][1];
+
 //Get all the student from SIS database and set the limit to 100000 students per iteration.
-// The pupose of this iteration is to avoid PHP Fatal error: Allowed memory size of 2000000000.
-// The error is a known bug for php 5.1.6, it only reconized a maximum of 2GB memory, even the system has a 64bit format.
-for ($count = 0;$count<8000000;$count+=100000){
-  getPartialStudentData($count, $count+100000, $faculties, $programs);
+for ($count = 0;$count<$numOfStudents;$count+=INCREMENT_SIZE){
+  getPartialStudentData($count, $count+INCREMENT_SIZE, $faculties, $programs);
 }
 
 function getPartialStudentData($startID, $endID,  $faculties, $programs){
@@ -99,11 +106,8 @@ function getPartialStudentData($startID, $endID,  $faculties, $programs){
 
   $result = $sync->db2_query($sql);
 
-
-  
 //Join the faculty_id to the student's record
   $result = $sync->join_results($result, $faculties, 'FACULTY_ID', 'code', 'faculty_id', FALSE);
-
 
 //Join the program_id to the student's record
   $result = $sync->join_results($result, $programs, 'PROGRAM_ID', 'code', 'program_id', FALSE);
