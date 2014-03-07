@@ -1,4 +1,8 @@
 <?php
+// @author Kelvin Chan
+// @date 2014-01-09
+// @purpose queries to fetch final exam data from DB2, and insert into ventus DB
+
 $db2_sql = "SELECT
 ACAD_ACT_CD,
 SESSION_CD,
