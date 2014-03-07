@@ -1,4 +1,7 @@
 <?php
+// @author Kelvin Chan
+// @date 2014-01-09
+// @purpose queries to fetch course classes data from DB2, and insert into ventus DB
 
 $sql = "SELECT
 TRIM(ACAD_ACT_CD) || TRIM(SECTION_CD) || TRIM(SESSION_CD) AS COURSE,
@@ -9,9 +12,11 @@ MEET_START_DT,
 MEET_START_TM,
 MEET_BUILDING_CD,
 MEET_ROOM_NR,
-TEACH_METHOD 
+TEACH_METHOD,
+TEACH_METHOD_MEET 
 FROM
-SISR.MEETING_SCHD_COURSES";
+SISR.MEETING_SCHD_COURSES_V01
+WHERE OFFERED_BY_INST != '350712'";
 $result = $sync->db2_query($sql);
 
 
@@ -24,6 +29,11 @@ $courses = $sync->mysql_query($sql);
 
 $result = $sync->join_results($result, $courses, 'COURSE','code','course_id');
 
+/**
+* A public variable
+@var String stores current timestamp
+*/
+// $time_stamp = date("Y-m-d H:i:s");
 
 $sql = "DROP TABLE IF EXISTS `org_course_classes_temp`";
 
@@ -39,6 +49,7 @@ $sql = "CREATE TABLE `org_course_classes_temp` (
   `building_code` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
   `room_number` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
   `teaching_method` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `teaching_method_meet` tinyint(2) NOT NULL,
   `day_of_week` varchar(50) COLLATE utf8_unicode_ci NOT NULL,
   `last_updated` datetime NOT NULL,
   PRIMARY KEY (`class_id`)
@@ -57,6 +68,7 @@ org_course_classes_temp (
   building_code, 
   room_number, 
   teaching_method, 
+  teaching_method_meet, 
   last_updated
   )
 VALUES 
@@ -74,6 +86,11 @@ room_number = VALUES(room_number),
 teaching_method = VALUES(teaching_method), 
 last_updated = VALUES(last_updated)";
 $sync->mysql_insert($result,$sql);
+// if ($return = $sync->mysql_insert($result,$sql)){
+//   $delete_old_course_classes = "DELETE FROM org_course_classes WHERE last_updated < '".$time_stamp ."'";
+//   $sync->mysql_query($delete_old_course_classes);
+//   printf("Course-classes older than %s are deleted from org_course_classes\n", $time_stamp);
+// }
 unset($result);
 
 ?>
