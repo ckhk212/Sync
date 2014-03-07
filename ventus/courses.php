@@ -1,4 +1,7 @@
 <?php 
+// @author Kelvin Chan
+// @date 2014-01-09
+// @purpose queries to fetch courses data from DB2, and insert into ventus DB
 
 $sql = "SELECT 
 ACAD_ACT_TITLE,
@@ -10,7 +13,8 @@ GIVEN_NAME,
 SURNAME,
 SHORT_EMAIL
 FROM 
-SISR.TEACH_ASSIGN_COURSE_EMAIL
+SISR.TEACH_ASSIGN_COURSE_EMAIL_V01
+WHERE OFFERED_BY_INST != '350712'
 GROUP BY 
 ACAD_ACT_TITLE,
 SESSION_CD,
@@ -21,7 +25,6 @@ GIVEN_NAME,
 SURNAME,
 SHORT_EMAIL";
 $result = $sync->db2_query($sql);
-
 
 $sql = "DROP TABLE IF EXISTS `org_courses_temp`";
 
@@ -64,12 +67,7 @@ name = VALUES(name),
 professor_email = VALUES(professor_email),
 last_updated = VALUES(last_updated)";
 $sync->mysql_insert($result,$sql);
-/*
-INSERT INTO table2 (column1, column2, column3)
-SELECT column1, 'no', column3 FROM table2 WHERE column2 = 'yes'
 
-this could be the patch solution for missing professor email on TUT 
-*/
-unset($data);
+unset($result);
 
 ?>
