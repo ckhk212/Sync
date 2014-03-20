@@ -59,8 +59,8 @@ if (is_array($result) && !is_object($result)){
 
 	/* if today's date is greater than the defined PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE and also less than the end of exam date, then prepare CSV */
 	if(strtotime(date("Y-m-d H:i:s")) > strtotime(PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE) && strtotime(date("Y-m-d H:i:s")) < strtotime($examPeriod["end"])){
-		// array_push($csvContent, "New");
-		// $csvContent = array_merge($csvContent, $result);
+		array_push($csvContent, "New");
+		$csvContent = array_merge($csvContent, $result);
 	}
 }
 
@@ -98,8 +98,8 @@ if (is_array($result) && !is_object($result)){
 
 	/* if today's date is greater than the defined PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE and also less than the end of exam date, then prepare CSV */
 	if(strtotime(date("Y-m-d H:i:s")) > strtotime(PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE) && strtotime(date("Y-m-d H:i:s")) < strtotime($examPeriod["end"])){
-		// array_push($csvContent, "Update");
-		// $csvContent = array_merge($csvContent, $result);
+		array_push($csvContent, "Update");
+		$csvContent = array_merge($csvContent, $result);
 	}
 }
 
@@ -137,8 +137,8 @@ if (is_array($result) && !is_object($result)){
 
 	/* if today's date is greater than the defined PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE and also less than the end of exam date, then prepare CSV */
 	if(strtotime(date("Y-m-d H:i:s")) > strtotime(PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE) && strtotime(date("Y-m-d H:i:s")) < strtotime($examPeriod["end"])){
-		// array_push($csvContent, "Delete");
-		// $csvContent = array_merge($csvContent, $result);
+		array_push($csvContent, "Delete");
+		$csvContent = array_merge($csvContent, $result);
 	}
 }
 
