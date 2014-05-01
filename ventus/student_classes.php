@@ -7,6 +7,10 @@ $sync = new SyncObject();
 
 define('INCREMENT_SIZE', '300000');
 
+$sql = "TRUNCATE TABLE org_student_classes";
+
+$sync->mysql_query($sql);
+
 $sql = "SELECT teaching_method FROM org_course_classes GROUP BY teaching_method";
 
 /* execute query to  */

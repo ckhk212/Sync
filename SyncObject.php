@@ -42,7 +42,7 @@ class SyncObject{
 		"UID=" . db2_username . ";" .
 		"PWD=" . db2_passwrod . ";";
 		if (!($this->db2 = db2_connect($connection_string, '', ''))){
-			exit("db2 onnect failed: ".db2_conn_errormsg()."\n=================================== END ================================\n\n");
+			exit("db2 connect failed: ".db2_conn_errormsg()."\n=================================== END ================================\n\n");
 		} 
 	}
 
