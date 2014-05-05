@@ -1,7 +1,13 @@
 <?php
 // @author Kelvin Chan
+<<<<<<< HEAD
 // @date 2014-01-09
 // @purpose various abstract functions for models to interact with the database
+=======
+// @date 2014-05-05
+// @purpose various abstract functions for models to interact with the database
+// @version 1.2
+>>>>>>> finalExam
 error_reporting( error_reporting() & ~E_NOTICE );
 require_once ('config.php');
 
@@ -51,9 +57,13 @@ class SyncObject{
 		if($result = db2_exec($this->db2, $sql)){
 			$data = array();
 			if($result && is_resource($result)) {
+			if($result && is_resource($result) && db2_num_fields($result) != 0) {
 				while($row = db2_fetch_assoc($result)){
 					$data[] = $this->trim($row);
 				}
+				return $data;
+			}else{
+				exit("Update Successfully!\n");
 			}
 			return $data;
 		}else{
