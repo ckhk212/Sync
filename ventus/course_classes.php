@@ -59,9 +59,9 @@ $sql = "CREATE TABLE `org_".COURSE_CLASSES_TABLE."_temp` (
   `day_of_week` varchar(50) COLLATE utf8_unicode_ci NOT NULL,
   `last_updated` datetime NOT NULL,
   PRIMARY KEY (`class_id`),
-  KEY `fk_org_course_classes_temp_org_courses_temp_idx` (`course_id`),
-  CONSTRAINT `fk_org_course_classes_temp_org_courses_temp` FOREIGN KEY (`course_id`) REFERENCES `org_courses_temp` (`course_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=247407 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
+  KEY `fk_org_".COURSE_CLASSES_TABLE."_org_".COURSES_TABLE."_idx_".date("Y-m-d H")."` (`course_id`),
+  CONSTRAINT `fk_org_".COURSE_CLASSES_TABLE."_org_".COURSES_TABLE."` FOREIGN KEY (`course_id`) REFERENCES `org_".COURSES_TABLE."_temp` (`course_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
 
 $sync->mysql_query($sql);
 
