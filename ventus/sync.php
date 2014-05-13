@@ -44,7 +44,7 @@ $table_names = array(FACULTIES_TABLE, DEPARTMENTS_TABLE, PROGRAMS_TABLE, COURSES
 /**
 	@purpose: Clean up some of the possible tempory tables before starting the sync process
 	**/
-	for($i=sizeof($table_names);$i>=0;--$i){
+	for($i=count($table_names);$i>=0;--$i){
 		$sql ="DROP TABLE IF EXISTS `org_".$table_names[$i-1]."_temp`";
 		$sync->mysql_query($sql);
 	}
@@ -73,33 +73,33 @@ $table_names = array(FACULTIES_TABLE, DEPARTMENTS_TABLE, PROGRAMS_TABLE, COURSES
 		exit("===================================== DEBUD MODE END ======================================\n\n");
 	}
 	else{
-		foreach ($table_names as $name){
-	/*
-	*	drop the prvious backup tables
-	*/
-	$sql = "DROP TABLE IF EXISTS `org_".$name."_".date('Y-m',strtotime('-1 month'))."`";
-	$sync->mysql_query($sql);
-	$sql = "DROP TABLE IF EXISTS `org_".$name."_".date('Y-m')."`";
-	$sync->mysql_query($sql);
+		foreach ($table_names as $index=>$name){
+			/*
+			*	drop the prvious backup tables
+			*/
+			$sql = "DROP TABLE IF EXISTS `org_".$name."_".date('Y-m',strtotime('-1 month'))."`";
+			$sync->mysql_query($sql);
+			$sql = "DROP TABLE IF EXISTS `org_".$name."_".date('Y-m')."`";
+			$sync->mysql_query($sql);
 
-	/*
-	*	create backup tables
-	*/
-	$sql = "RENAME TABLE `org_".$name."` TO `org_".$name."_".date('Y-m')."`";
+			/*
+			*	create backup tables
+			*/
+			$sql = "RENAME TABLE `org_".$name."` TO `org_".$name."_".date('Y-m')."`";
 
-	/*
-	*	check if backup create successfully, else revert changes.
-	*/
-	if($sync->mysql_query($sql)){
-		printf("%s table is backup on %s\n", $name, date('Y-m-d H:i:s'));
-		$sql = "RENAME TABLE `org_".$name."_temp` TO `org_".$name."`";
-		$sync->mysql_query($sql);
-		printf("%s table is renamed on %s\n\n", $name, date('Y-m-d H:i:s'));
-	}else{
-		printf("%s table did not backup porperly on %s\n", $name, date('Y-m-d H:i:s'));
-		$sql = "RENAME TABLE `org_".$name."_".date('Y-m')."` TO `org_".$name."`";
-		$sync->mysql_query($sql);
+			/*
+			*	check if backup create successfully, else revert changes.
+			*/
+			if($sync->mysql_query($sql)){
+				printf("%s table is backup on %s\n", $name, date('Y-m-d H:i:s'));
+				$sql = "RENAME TABLE `org_".$name."_temp` TO `org_".$name."`";
+				$sync->mysql_query($sql);
+				printf("%s table is renamed on %s\n\n", $name, date('Y-m-d H:i:s'));
+			}else{
+				printf("%s table did not backup porperly on %s\n", $name, date('Y-m-d H:i:s'));
+				$sql = "RENAME TABLE `org_".$name."_".date('Y-m')."` TO `org_".$name."`";
+				$sync->mysql_query($sql);
+			}
+		}
+		echo "===================================== END ======================================\n\n";
 	}
-}
-echo "===================================== END ======================================\n\n";
-}
