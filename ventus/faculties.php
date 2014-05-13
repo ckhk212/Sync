@@ -1,7 +1,8 @@
 <?php 
 // @author Kelvin Chan
-// @date 2014-01-09
+// @date 2014-05-09
 // @purpose queries to fetch faculties data from DB2, and insert into ventus DB
+// @version 1.1
 
 $sql = "SELECT 
 FACULTY_ID,
@@ -18,14 +19,10 @@ THEN 1
 ELSE 0 
 END AS ACTIVE
 FROM 
-SISR.FACULTIES";
+".DB2_FACULTUES."";
 $result = $sync->db2_query($sql);
 
-$sql ="DROP TABLE IF EXISTS `org_faculties_temp`";
-
-$sync->mysql_query($sql);
-
-$sql = "CREATE TABLE `org_faculties_temp` (
+$sql = "CREATE TABLE `org_".FACULTIES_TABLE."_temp` (
   `faculty_id` int(11) NOT NULL AUTO_INCREMENT,
   `active` tinyint(1) NOT NULL,
   `code` varchar(255) NOT NULL,
@@ -35,12 +32,12 @@ $sql = "CREATE TABLE `org_faculties_temp` (
   `last_updated` datetime NOT NULL,
   PRIMARY KEY (`faculty_id`),
   UNIQUE KEY `code_UNIQUE` (`code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8";
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8";
 
 $sync->mysql_query($sql);
 
 $sql = "INSERT INTO
-org_faculties_temp (
+org_".FACULTIES_TABLE."_temp (
 	code, 
 	faculty_eng, 
 	faculty_fra, 
@@ -58,7 +55,7 @@ faculty_fra = VALUES(faculty_fra),
 stpaul = VALUES(stpaul),
 active = VALUES(active),
 last_updated = VALUES(last_updated)";
-$sync->mysql_insert($result,$sql);
-unset($result);
+$sync->mysql_insert($result,$sql, count($result));
 
-?>
+// unset the variables to prevent memory lost
+unset($result, $sql);

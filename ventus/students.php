@@ -1,14 +1,10 @@
 <?php
 // @author Kelvin Chan
-// @date 2014-01-09
+// @date 2014-05-09
 // @purpose queries to fetch students data from DB2, and insert into ventus DB
-define('INCREMENT_SIZE', '100000');
+// @version 1.1
 
-$sql = "DROP TABLE IF EXISTS `org_students_temp`";
-
-$sync->mysql_query($sql);
-
-$sql = "CREATE TABLE `org_students_temp` (
+$sql = "CREATE TABLE `org_".STUDENTS_TABLE."_temp` (
   `student_id` int(11) NOT NULL DEFAULT '0',
   `faculty_id` int(11) DEFAULT NULL,
   `program_id` int(11) DEFAULT NULL,
@@ -48,7 +44,7 @@ $sql = "SELECT
 code,
 faculty_id
 FROM
-org_faculties_temp";
+org_".FACULTIES_TABLE."_temp";
 $faculties = $sync->mysql_query($sql);
 
 /* get a list of all possible programs */
@@ -56,7 +52,7 @@ $sql = "SELECT
 code,
 program_id
 FROM
-org_programs_temp";
+org_".PROGRAMS_TABLE."_temp";
 $programs = $sync->mysql_query($sql);
 
 /* get current student size */
@@ -64,10 +60,13 @@ $db2_sql = "SELECT MAX(STUDENT_ID) FROM SISR.STUDENT_PERSONAL";
 $numOfStudents = $sync->db2_query($db2_sql);
 $numOfStudents = $numOfStudents[0][1];
 
-//Get all the student from SIS database and set the limit to 100000 students per iteration.
-for ($count = 0;$count<$numOfStudents;$count+=INCREMENT_SIZE){
-  getPartialStudentData($count, $count+INCREMENT_SIZE, $faculties, $programs);
+//Get all the student from SIS database in incremental basis
+for ($count = 0;$count<$numOfStudents;$count+=STUDENT_INCREMENT_SIZE){
+  getPartialStudentData($count, $count+STUDENT_INCREMENT_SIZE, $faculties, $programs);
 }
+
+// unset the variables to prevent memory lost
+unset($faculties, $programs, $sql, $db2_sql, $numOfStudents, $count);
 
 function getPartialStudentData($startID, $endID,  $faculties, $programs){
   global $sync;
@@ -98,11 +97,12 @@ function getPartialStudentData($startID, $endID,  $faculties, $programs){
   RTRIM(PERM_STREET_LINE1),
   PERM_TELEPHONE_NR
   FROM
-  SISR.STUDENT_PERSONAL A
+  ".DB2_STUDENT_PERSONAL." A
   LEFT OUTER JOIN
-  SISR.STUDENT_REGISTRATION_INSCRIT_V3 B
+  ".DB2_STUDENT_REGISTRATION." B
   ON 
-  A.STUDENT_ID = B.PERSON_ID WHERE A.STUDENT_ID >= '$startID' AND A.STUDENT_ID < '$endID'";
+  A.STUDENT_ID = B.PERSON_ID 
+  WHERE A.STUDENT_ID >= '$startID' AND A.STUDENT_ID < '$endID'";
 
   $result = $sync->db2_query($sql);
 
@@ -114,7 +114,7 @@ function getPartialStudentData($startID, $endID,  $faculties, $programs){
 
 //Insert/update the students' records into our DB
   $sql = "INSERT INTO
-  org_students_temp (
+  org_".STUDENTS_TABLE."_temp (
     student_id, 
     faculty_id,
     program_id,
@@ -172,8 +172,7 @@ mail_phone = VALUES(mail_phone),
 email = VALUES(email),
 last_updated = VALUES(last_updated)";
 
-$sync->mysql_insert($result,$sql, 10000);
+$sync->mysql_insert($result,$sql, count($result));
 
-unset($result); 
+unset($result);
 }
-?>

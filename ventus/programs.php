@@ -1,7 +1,8 @@
 <?php
 // @author Kelvin Chan
-// @date 2014-01-09
+// @date 2014-05-09
 // @purpose queries to fetch programs data from DB2, and insert into ventus DB
+// @version 1.1
 
 $sql = "SELECT 
 MAX(SECOND_ORG_CD) AS SECOND_ORG_CD,
@@ -14,7 +15,7 @@ THEN 1
 ELSE 0
 END AS ACTIVE
 FROM 
-SISR.POST_INVENTORY_PROGRAMS
+".DB2_PROGRAMS."
 GROUP BY 
 POST_CD";
 $result = $sync->db2_query($sql);
@@ -23,18 +24,12 @@ $sql = "SELECT
 department_id,
 code
 FROM
-org_departments_temp";
+org_".DEPARTMENTS_TABLE."_temp";
 $departments = $sync->mysql_query($sql);
 
 $result = $sync->join_results($result,$departments,'SECOND_ORG_CD','code','department_id', FALSE);
 
-unset($departments);
-
-$sql = "DROP TABLE IF EXISTS `org_programs_temp`";
-
-$sync->mysql_query($sql);
-
-$sql = "CREATE TABLE `org_programs_temp` (
+$sql = "CREATE TABLE `org_".PROGRAMS_TABLE."_temp` (
 	`program_id` int(11) NOT NULL AUTO_INCREMENT,
 	`department_id` int(11) NOT NULL,
 	`active` tinyint(1) NOT NULL,
@@ -50,7 +45,7 @@ $sql = "CREATE TABLE `org_programs_temp` (
 $sync->mysql_query($sql);
 
 $sql = "INSERT INTO 
-org_programs_temp (
+org_".PROGRAMS_TABLE."_temp (
 	department_id,
 	code,
 	program_eng,
@@ -68,7 +63,6 @@ code = VALUES(code),
 program_eng = VALUES(program_eng),
 program_fra = VALUES(program_fra),
 last_updated = VALUES(last_updated)";
-$sync->mysql_insert($result,$sql);
-unset($result);
+$sync->mysql_insert($result,$sql, count($result));
 
-?>
+unset($departments, $result, $sql);
