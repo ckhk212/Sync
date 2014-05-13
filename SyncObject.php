@@ -9,8 +9,7 @@ require_once ('config.php');
 /**
 *	Constant Definition
 **/
-define('default_bulk_size', 10000);
-define('rolling_insert_bulk_size', 100000);
+
 
 class SyncObject{
 	private $db2; // db2 connection object
@@ -30,7 +29,8 @@ class SyncObject{
 			if ($this->mysql->connect_errno) {
 				exit("mysqli connect failed: ".$this->mysql->connect_error."\n=================================== END ================================\n\n");
 			}
-			if(!isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] !== '--cron'){
+
+			if($_SERVER['argv'][1] !== '--cron'){
 				$this->mysql->set_charset('utf8');
 			}
 			break;
@@ -57,7 +57,8 @@ class SyncObject{
 				}
 				return $data;
 			}else{
-				exit("Update Successfully!\n");
+				echo("Update Successfully!\n");
+				return $result;
 			}
 		}else{
 			exit("DB2 Query failed: ".db2_stmt_errormsg($this->db2)."\n=================================== END ================================\n\n");
@@ -76,7 +77,7 @@ class SyncObject{
 
 	}  
 
-	public function mysql_insert($data, $query, $bulk_size=default_bulk_size) {
+	public function mysql_insert($data, $query, $bulk_size=DEFAULT_BULK_SIZE) {
 		if ($this->mysql instanceof PDO) {
 			return;
 		}
@@ -172,33 +173,6 @@ class SyncObject{
 			}
 		}
 		return $result_left;
-	}
-
-	public function db2_query_rolling_insert($sql, $mysql_template, $func, $bulk_size=rolling_insert_bulk_size) { 
-		$return = FALSE;
-		$link = $this->db2;
-		$result = db2_exec($link, $sql)
-		or die(db2_stmt_errormsg($link) . "\n\n" . $sql);
-		$data = array();
-		if($result && is_resource($result)) {
-			while($row = db2_fetch_assoc($result)) {
-				$data[] = $row;
-				if(count($data) == $bulk_size) {
-					$data = $func($data);
-					if($return  = $this->mysql_insert($data, $mysql_template, $bulk_size)){
-						$data = array(); 
-					}else{
-						exit("Function mysql_insert failed, execution terminated.\n=================================== END ================================\n\n");
-					}
-				}
-			}
-			$data = $func($data);
-			if($return  = $this->mysql_insert($data, $mysql_template, $bulk_size)){
-				return $return;
-			}else{
-				exit("Function mysql_insert failed, execution terminated.\n=================================== END ================================\n\n");
-			}
-		}
 	}
 
 	public function close_connection(){
