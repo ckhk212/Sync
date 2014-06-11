@@ -66,7 +66,7 @@ for ($count = 0;$count<$numOfStudents;$count+=STUDENT_INCREMENT_SIZE){
 }
 
 // unset the variables to prevent memory lost
-unset($faculties, $programs, $sql, $db2_sql, $numOfStudents, $count);
+unset($faculties, $programs, $sql, $db2_sql, $count);
 
 function getPartialStudentData($startID, $endID,  $faculties, $programs){
   global $sync;
