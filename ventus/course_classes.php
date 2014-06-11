@@ -5,31 +5,37 @@
 // @version 1.3
 
 $sql = "SELECT
-TRIM(A.ACAD_ACT_CD) || TRIM(A.SECTION_CD) || TRIM(A.SESSION_CD) AS COURSE,
-A.TEACH_METHOD,
-A.TEACH_METHOD_MEET,
+TRIM(B.ACAD_ACT_CD) || TRIM(B.SECTION_CD) || TRIM(B.SESSION_CD) AS COURSE,
+B.TEACH_METHOD,
+B.TEACH_METHOD_MEET,
 B.SURNAME,
 B.GIVEN_NAME,
-CASE WHEN B.SHORT_EMAIL IS NULL THEN B.LONG_EMAIL ELSE B.SHORT_EMAIL END AS EMAIL,
+CASE WHEN B.SHORT_EMAIL IS NULL 
+THEN B.LONG_EMAIL 
+ELSE B.SHORT_EMAIL 
+END AS EMAIL,
 A.MEET_START_DT,
 A.MEET_END_DT,
 A.MEET_START_TM,
 A.MEET_END_TM,
 A.MEET_BUILDING_CD,
 A.MEET_ROOM_NR,
-A.MEET_DAY
+A.MEET_DAY,
+CASE WHEN
+B.OFFERED_BY_INST = 350712
+THEN 1
+ELSE 0
+END AS STPAUL
 FROM
 ".DB2_COURSE_SCHEDULE." A
-RIGHT JOIN
+FULL OUTER JOIN
 ".DB2_COURSE_ASSIGN_EMAIL." B
 ON
 A.ACAD_ACT_CD = B.ACAD_ACT_CD AND
 A.SECTION_CD = B.SECTION_CD AND
 A.SESSION_CD = B.SESSION_CD AND
-A.TEACH_METHOD = B.TEACH_METHOD 
-AND A.TEACH_METHOD_MEET = B.TEACH_METHOD_MEET
-WHERE 
-A.OFFERED_BY_INST != '350712'";
+A.TEACH_METHOD = B.TEACH_METHOD AND 
+A.TEACH_METHOD_MEET = B.TEACH_METHOD_MEET";
 
 $result = $sync->db2_query($sql);
 
@@ -57,10 +63,11 @@ $sql = "CREATE TABLE `org_".COURSE_CLASSES_TABLE."_temp` (
   `building_code` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
   `room_number` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
   `day_of_week` varchar(50) COLLATE utf8_unicode_ci NOT NULL,
+  `stpaul` tinyint(1) NOT NULL,
   `last_updated` datetime NOT NULL,
   PRIMARY KEY (`class_id`),
   KEY `fk_org_".COURSE_CLASSES_TABLE."_org_".COURSES_TABLE."_idx_".date("Y-m-d H")."` (`course_id`),
-  CONSTRAINT `fk_org_".COURSE_CLASSES_TABLE."_org_".COURSES_TABLE."` FOREIGN KEY (`course_id`) REFERENCES `org_".COURSES_TABLE."_temp` (`course_id`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `fk_org_".COURSE_CLASSES_TABLE."_org_".COURSES_TABLE.date("Y-m-d H")."` FOREIGN KEY (`course_id`) REFERENCES `org_".COURSES_TABLE."_temp` (`course_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
 
 $sync->mysql_query($sql);
@@ -80,6 +87,7 @@ org_".COURSE_CLASSES_TABLE."_temp (
   `building_code`,
   `room_number`,
   `day_of_week`,
+  `stpaul`,
   `last_updated`
   )
 VALUES 
@@ -97,6 +105,7 @@ end_time = VALUES(end_time),
 building_code = VALUES(building_code),
 room_number = VALUES(room_number),
 day_of_week = VALUES(day_of_week),
+stpaul = VALUES(stpaul),
 last_updated = VALUES(last_updated)";
 $sync->mysql_insert($result,$sql, count($result));
 
