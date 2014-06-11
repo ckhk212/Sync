@@ -14,7 +14,7 @@ $sql = "CREATE TABLE `org_".STUDENT_COURSE_CLASSES_TABLE."_temp` (
 
 $sync->mysql_query($sql);
 
-$sql = "SELECT teaching_method FROM org_".COURSE_CLASSES_TABLE."_temp GROUP BY teaching_method";
+$sql = "SELECT teaching_method FROM org_".COURSE_CLASSES_TABLE."_temp WHERE teaching_method != '' GROUP BY teaching_method";
 
 /* execute query to  */
 $teach_methods = $sync->mysql_query($sql);
