@@ -14,6 +14,7 @@ require_once ('config.php');
 class SyncObject{
 	private $db2; // db2 connection object
 	private $mysql; // mysql connection object
+	private $mssql; // mssql connection object
 
 	public function __construct($mysql_connection_type=NULL) {
 		switch ($mysql_connection_type) {
@@ -22,6 +23,12 @@ class SyncObject{
 				$this->mysql = new PDO("mysql:host=".mysql_host.";port=".mysql_port.";dbname=".mysql_dbname."", mysql_username, mysql_passwrod);
 			} catch (PDOException $e) {
 				exit("pdo connect failed: ".$e->getMessage()."\n=================================== END ================================\n\n");
+			}
+			break;
+			case 'mssql':
+			$this->mssql = mssql_connect(mssql_port.':'.mssql_host, mssql_username, mssql_passwrod);
+			if (!$this->mssql){
+				exit("MS-SQL connection failed: \n=================================== END ================================\n\n");
 			}
 			break;
 			default:
@@ -155,6 +162,10 @@ class SyncObject{
 				exit("Re-ping mysql server failed, execution terminated.\n=================================== END ================================\n\n");
 			}
 		}
+	}
+
+	public function mssql_query($query){
+		return $mssql_query($query);
 	}
 
 	public function join_results(&$result_left, &$result_right, $left, $right, $value, $unset=TRUE) {
