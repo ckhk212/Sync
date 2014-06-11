@@ -5,8 +5,7 @@
 // @version 1.4
 
 require_once '/var/www/html/sass/sync/SyncObject.php';
-require_once '/var/www/html/sass/apps/ventus/includes/php/config.php';
-require_once '/var/www/html/sass/apps/ventus/includes/php/functions.php';
+require_once FS_PHP.'/functions.php';
 $sync = new SyncObject();
 
 /**
@@ -37,15 +36,15 @@ $sync = new SyncObject();
 echo "Control table updated to Start Session: ".$start_session." End Session: ".$end_session."\n";
 
 // unset the variables to prevent memory lost
-unset($semester, $current_year, $start_year, $month, $start_session, $end_year,$end_session);
+unset($semester, $current_year, $start_session, $end_session);
 
 $table_names = array(FACULTIES_TABLE, DEPARTMENTS_TABLE, PROGRAMS_TABLE, COURSES_TABLE, COURSE_CLASSES_TABLE, STUDENTS_TABLE, STUDENT_COURSE_CLASSES_TABLE);
 
 /**
 	@purpose: Clean up some of the possible tempory tables before starting the sync process
 	**/
-	for($i=count($table_names);$i>=0;--$i){
-		$sql ="DROP TABLE IF EXISTS `org_".$table_names[$i-1]."_temp`";
+	for($i=count($table_names)-1;$i>=0;--$i){
+		$sql ="DROP TABLE IF EXISTS `org_".$table_names[$i]."_temp`";
 		$sync->mysql_query($sql);
 	}
 // unset the variables to prevent memory lost
@@ -73,31 +72,31 @@ $table_names = array(FACULTIES_TABLE, DEPARTMENTS_TABLE, PROGRAMS_TABLE, COURSES
 		exit("===================================== DEBUD MODE END ======================================\n\n");
 	}
 	else{
-		foreach ($table_names as $index=>$name){
+		for($i=count($table_names)-1;$i>=0;--$i){
 			/*
 			*	drop the prvious backup tables
 			*/
-			$sql = "DROP TABLE IF EXISTS `org_".$name."_".date('Y-m',strtotime('-1 month'))."`";
+			$sql = "DROP TABLE IF EXISTS `org_".$table_names[$i]."_".date('Y-m',strtotime('-1 month'))."`";
 			$sync->mysql_query($sql);
-			$sql = "DROP TABLE IF EXISTS `org_".$name."_".date('Y-m')."`";
+			$sql = "DROP TABLE IF EXISTS `org_".$table_names[$i]."_".date('Y-m')."`";
 			$sync->mysql_query($sql);
 
 			/*
 			*	create backup tables
 			*/
-			$sql = "RENAME TABLE `org_".$name."` TO `org_".$name."_".date('Y-m')."`";
+			$sql = "RENAME TABLE `org_".$table_names[$i]."` TO `org_".$table_names[$i]."_".date('Y-m')."`";
 
 			/*
 			*	check if backup create successfully, else revert changes.
 			*/
 			if($sync->mysql_query($sql)){
-				printf("%s table is backup on %s\n", $name, date('Y-m-d H:i:s'));
-				$sql = "RENAME TABLE `org_".$name."_temp` TO `org_".$name."`";
+				printf("%s table is backup on %s\n", $table_names[$i], date('Y-m-d H:i:s'));
+				$sql = "RENAME TABLE `org_".$table_names[$i]."_temp` TO `org_".$table_names[$i]."`";
 				$sync->mysql_query($sql);
-				printf("%s table is renamed on %s\n\n", $name, date('Y-m-d H:i:s'));
+				printf("%s table is renamed on %s\n\n", $table_names[$i], date('Y-m-d H:i:s'));
 			}else{
-				printf("%s table did not backup porperly on %s\n", $name, date('Y-m-d H:i:s'));
-				$sql = "RENAME TABLE `org_".$name."_".date('Y-m')."` TO `org_".$name."`";
+				printf("%s table did not backup porperly on %s\n", $table_names[$i], date('Y-m-d H:i:s'));
+				$sql = "RENAME TABLE `org_".$table_names[$i]."_".date('Y-m')."` TO `org_".$table_names[$i]."`";
 				$sync->mysql_query($sql);
 			}
 		}
