@@ -66,8 +66,8 @@ $sql = "CREATE TABLE `org_".COURSE_CLASSES_TABLE."_temp` (
   `stpaul` tinyint(1) NOT NULL,
   `last_updated` datetime NOT NULL,
   PRIMARY KEY (`class_id`),
-  KEY `fk_org_".COURSE_CLASSES_TABLE."_org_".COURSES_TABLE."_idx_".date("Y-m-d H")."` (`course_id`),
-  CONSTRAINT `fk_org_".COURSE_CLASSES_TABLE."_org_".COURSES_TABLE.date("Y-m-d H")."` FOREIGN KEY (`course_id`) REFERENCES `org_".COURSES_TABLE."_temp` (`course_id`) ON DELETE CASCADE ON UPDATE CASCADE
+  KEY `fk_org_".COURSE_CLASSES_TABLE."_org_".COURSES_TABLE."_idx_".date("Y-m-d H:i")."` (`course_id`),
+  CONSTRAINT `fk_org_".COURSE_CLASSES_TABLE."_org_".COURSES_TABLE.date("Y-m-d H:i")."` FOREIGN KEY (`course_id`) REFERENCES `org_".COURSES_TABLE."_temp` (`course_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
 
 $sync->mysql_query($sql);

@@ -8,8 +8,8 @@ $sql = "CREATE TABLE `org_".STUDENT_COURSE_CLASSES_TABLE."_temp` (
 	`student_id` int(11) NOT NULL,
 	`class_id` int(11) NOT NULL,
 	`last_updated` datetime NOT NULL,
-	KEY `fk_".STUDENT_COURSE_CLASSES_TABLE."_".COURSE_CLASSES_TABLE."_idx_".date("Y-m-d H")."` (`class_id`),
-	CONSTRAINT `fk_org_".STUDENT_COURSE_CLASSES_TABLE."_org_".COURSE_CLASSES_TABLE.date("Y-m-d H")."` FOREIGN KEY (`class_id`) REFERENCES `org_".COURSE_CLASSES_TABLE."_temp` (`class_id`) ON DELETE CASCADE ON UPDATE CASCADE
+	KEY `fk_".STUDENT_COURSE_CLASSES_TABLE."_".COURSE_CLASSES_TABLE."_idx_".date("Y-m-d H:i")."` (`class_id`),
+	CONSTRAINT `fk_org_".STUDENT_COURSE_CLASSES_TABLE."_org_".COURSE_CLASSES_TABLE.date("Y-m-d H:i")."` FOREIGN KEY (`class_id`) REFERENCES `org_".COURSE_CLASSES_TABLE."_temp` (`class_id`) ON DELETE CASCADE ON UPDATE CASCADE
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
 
 $sync->mysql_query($sql);
