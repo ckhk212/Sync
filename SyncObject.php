@@ -36,10 +36,7 @@ class SyncObject{
 			if ($this->mysql->connect_errno) {
 				exit("mysqli connect failed: ".$this->mysql->connect_error."\n=================================== END ================================\n\n");
 			}
-
-			if($_SERVER['argv'][1] !== '--cron'){
-				$this->mysql->set_charset('utf8');
-			}
+			$this->mysql->set_charset('utf8');
 			break;
 		}
 		$connection_string = 
