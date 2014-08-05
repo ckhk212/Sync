@@ -4,7 +4,6 @@
 // @purpose various abstract functions for models to interact with the database
 // @version 1.2
 error_reporting( error_reporting() & ~E_NOTICE );
-require_once ('config.php');
 
 /**
 *	Constant Definition
@@ -26,7 +25,7 @@ class SyncObject{
 			}
 			break;
 			case 'mssql':
-			$this->mssql = mssql_connect(mssql_port.':'.mssql_host, mssql_username, mssql_passwrod);
+			$this->mssql = mssql_connect(mssql_host.':'.mssql_port, mssql_username, mssql_passwrod);
 			if (!$this->mssql){
 				exit("MS-SQL connection failed: \n=================================== END ================================\n\n");
 			}
@@ -120,6 +119,7 @@ class SyncObject{
 					$return = TRUE;
 				}
 				else{
+					var_dump($sql_query);
 					exit("MySQL query failed: ".$this->mysql->error." , execution terminated.\n=================================== END ================================\n\n");
 				}
 			}
@@ -177,6 +177,10 @@ class SyncObject{
 			else {
 				if($unset){
 					unset($result_left[$key]);
+					// array_push($undefined, $result_left[$key]);
+					// printf("Cannnot be foound %s\n", print_r($result_left[$key]));
+				}else{
+					$result_left[$key][$left] = 0;
 				}
 			}
 		}

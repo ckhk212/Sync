@@ -4,6 +4,7 @@
 // @purpose controller for the org data synchronization with DB2
 // @version 1.4
 
+require_once 'config.php';
 require_once '/var/www/html/sass/sync/SyncObject.php';
 require_once FS_PHP.'/functions.php';
 $sync = new SyncObject();

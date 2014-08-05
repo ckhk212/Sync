@@ -7,6 +7,7 @@ unset($sync);
 $sync = new SyncObject('mssql');
 
 if ($sync){
+
   for ($count = 0;$count<$numOfStudents;$count+=$count+=STUDENT_INCREMENT_SIZE){
     getPartialStudentData($count, $count+STUDENT_INCREMENT_SIZE);
   } 
@@ -18,7 +19,7 @@ else{
 
 function getPartialStudentData($startID, $endID){
   $query = "SELECT LTRIM(RTRIM(img.Employee_Number)) AS Student_id, img.Photo, card.Expiry_Date
-  FROM studcards.GA_IMAGE_IDS img 
+  FROM studcards.GA_IMAGE_IDS img
   INNER JOIN dbo.EPI_CARD card ON
   img.Employee_Number = card.Employee_Number
   WHERE img.Photo IS NOT NULL
@@ -38,4 +39,3 @@ function getPartialStudentData($startID, $endID){
    printf("%d downloaded successfully!\n", $result);
  }
 }
-
