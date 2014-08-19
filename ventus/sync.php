@@ -6,7 +6,7 @@
 
 require_once 'config.php';
 require_once '/var/www/html/sass/sync/SyncObject.php';
-require_once FS_PHP.'/functions.php';
+require_once FS_PHP.'/bootstrap.php';
 $sync = new SyncObject();
 
 /**
@@ -39,7 +39,7 @@ echo "Control table updated to Start Session: ".$start_session." End Session: ".
 // unset the variables to prevent memory lost
 unset($semester, $current_year, $start_session, $end_session);
 
-$table_names = array(FACULTIES_TABLE, DEPARTMENTS_TABLE, PROGRAMS_TABLE, COURSES_TABLE, COURSE_CLASSES_TABLE, STUDENTS_TABLE, STUDENT_COURSE_CLASSES_TABLE, SASS_EMPLOYEES_TABLE);
+$table_names = array(FACULTIES_TABLE, DEPARTMENTS_TABLE, PROGRAMS_TABLE, COURSES_TABLE, COURSE_CLASSES_TABLE, STUDENTS_TABLE, STUDENT_COURSE_CLASSES_TABLE);
 
 /**
 	@purpose: Clean up some of the possible tempory tables before starting the sync process
