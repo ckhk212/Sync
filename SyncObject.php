@@ -24,11 +24,18 @@ class SyncObject{
 				exit("pdo connect failed: ".$e->getMessage()."\n=================================== END ================================\n\n");
 			}
 			break;
-			case 'mssql':
-			$this->mssql = mssql_connect(mssql_host.':'.mssql_port, mssql_username, mssql_passwrod);
+			case 'student-pictures':
+			$this->mssql = mssql_connect(sp_mssql_host.':'.sp_mssql_port, sp_mssql_username, sp_mssql_passwrod);
 			if (!$this->mssql){
 				exit("MS-SQL connection failed: \n=================================== END ================================\n\n");
 			}
+			break;
+			case 'student-cards':
+			$this->mssql = mssql_connect(sc_mssql_host.':'.sc_mssql_port, sc_mssql_username, sc_mssql_passwrod);
+			if (!$this->mssql){
+				exit("MS-SQL connection failed: \n=================================== END ================================\n\n");
+			}
+			// mssql_select_db(sc_mssql_db, $this->mssql);
 			break;
 			default:
 			$this->mysql = new mysqli(mysql_host, mysql_username, mysql_passwrod, mysql_dbname);
@@ -162,7 +169,7 @@ class SyncObject{
 	}
 
 	public function mssql_query($query){
-		return $mssql_query($query);
+		return mssql_query($query);
 	}
 
 	public function join_results(&$result_left, &$result_right, $left, $right, $value, $unset=TRUE) {
