@@ -4,16 +4,18 @@
 // @purpose controller for the org data synchronization with DB2
 // @version 1.4
 
+namespace Sync;
+
 require_once 'config.php';
-require_once '/var/www/html/sass/sync/SyncObject.php';
-require_once FS_PHP.'/bootstrap.php';
+require_once dirname(__FILE__).DIRECTORY_SEPARATOR.'../SyncObject.php';
 $sync = new SyncObject();
+require_once dirname(__FILE__).DIRECTORY_SEPARATOR.'../../apps/ventus/includes/php/bootstrap.php';
 
 /**
 	@purpose: Fetch current semester in short code (ex: 20135 - Summer of 2013 session... ) 
   	and calcualte the upper and lower limit for the control tables
 		      **/
-  	$semester = VentusFunctions::fetchSemester();
+  	$semester = \VentusFunctions::fetchSemester();
   	$current_year = substr($semester['now_short'], 0, 4);
   	$start_year= $current_year-LOWER_CONTROL_LIMIT;
   	$month = substr($semester['now_short'], -1);
@@ -41,7 +43,7 @@ unset($semester, $current_year, $start_session, $end_session);
 
 $table_names = array(FACULTIES_TABLE, DEPARTMENTS_TABLE, PROGRAMS_TABLE, COURSES_TABLE, COURSE_CLASSES_TABLE, STUDENTS_TABLE, STUDENT_COURSE_CLASSES_TABLE);
 
-/**
+    /**
 	@purpose: Clean up some of the possible tempory tables before starting the sync process
 	**/
 	for($i=count($table_names)-1;$i>=0;--$i){
@@ -51,7 +53,7 @@ $table_names = array(FACULTIES_TABLE, DEPARTMENTS_TABLE, PROGRAMS_TABLE, COURSES
 // unset the variables to prevent memory lost
 	unset($i);
 
-/**
+    /**
 	@purpose: Being the sync process
 	**/
 	foreach ($table_names as $name){
@@ -65,7 +67,7 @@ $table_names = array(FACULTIES_TABLE, DEPARTMENTS_TABLE, PROGRAMS_TABLE, COURSES
 	echo "org_*_temp tables created\n";
 	echo "=================================== PARTIAL END ================================\n\n";
 
-/**
+    /**
 	@purpose: All tempory tables are created, and data are inserted properly. 
 	Perform backup for the current production tables, and rename the newly created tables into production.
 	**/
