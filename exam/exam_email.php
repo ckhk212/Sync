@@ -2,26 +2,19 @@
 /*
 @purpose Script to determine if final exams need to be inserted, updated and/or deleted
 @author Kelvin Chan
-@date 	2014-03-20
-@version 1.2
+@date 	2014-10-06
+@version 1.3
 */
+namespace Sync;
 
-define ("DB2_EXAM_TABLE", "exams"); // final exam data fetched from DB2
-define ("VENTUS_EXAM_TABLE", "ventus_professor_exam_requests"); // Ventus production exam table
-
-define('FOLDER_PATH', '/var/www/html/sass/sync/exam/'); // file save path
-define('FILE_NAME', 'Final Exam Data'); // file name
-define('FILE_EXT', 'csv'); // file extension
-
-require '/var/www/html/sass/sync/SyncObject.php';
+require_once 'config.php';
+require_once dirname(__FILE__).DIRECTORY_SEPARATOR.'../SyncObject.php';
 $sync = new SyncObject();
+require_once dirname(__FILE__).DIRECTORY_SEPARATOR.'../../apps/ventus/includes/php/bootstrap.php';
 
-/* some esstenial includes from Ventus */
-require_once('/var/www/html/sass/apps/ventus/includes/php/config.php');
-require_once(FS_PROFESSOR . '/models/professor.php'); 
-require_once(FS_FACULTY . '/models/faculty.php');
-
+namespace Ventus\Professor;
 $professor = new RequestForm(); // ventus professor object
+namespace Ventus\Faculty;
 $faculty = new Faculty(); // ventus faculty object
 $csvContent = array(); // file content
 
@@ -44,8 +37,8 @@ $result = $sync->mysql_query($sql);
 if (is_array($result) && !is_object($result)){
 
 	/* if today's date is smaller than the defined PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE, then change the NOEs table */
-	if(strtotime(date("Y-m-d H:i:s")) < strtotime(PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE)){
-		echo "INSERT on ".date("Y-m-d H:i:s")."\n\n";
+	if(strtotime(date(DATETIME_MYSQL)) < strtotime(PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE)){
+		echo "INSERT on ".date(DATETIME_MYSQL)."\n\n";
 		var_dump($result); 
 		$sql="INSERT INTO `".VENTUS_EXAM_TABLE."` (`session`, `course_code`, `course_section`, `exam_type`, `exam_date`, `exam_duration`, `exam_alternate_special`, 
 			`contact_name`, `requestor_email`, `confirmation_key`, `is_confirmed`, `imported_automatically`, 
@@ -58,7 +51,7 @@ if (is_array($result) && !is_object($result)){
 	}
 
 	/* if today's date is greater than the defined PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE and also less than the end of exam date, then prepare CSV */
-	if(strtotime(date("Y-m-d H:i:s")) > strtotime(PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE) && strtotime(date("Y-m-d H:i:s")) < strtotime($examPeriod["end"])){
+	if(strtotime(date(DATETIME_MYSQL)) > strtotime(PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE) && strtotime(date(DATETIME_MYSQL)) < strtotime($examPeriod["end"])){
 		array_push($csvContent, "New");
 		$csvContent = array_merge($csvContent, $result);
 	}
@@ -82,8 +75,8 @@ $result = $sync->mysql_query($sql);
 /* Update VENTUS_EXAM_TABLE entries if $result is found */
 if (is_array($result) && !is_object($result)){
 	/* if today's date is smaller than the defined PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE, then change the NOEs table */
-	if(strtotime(date("Y-m-d H:i:s")) < strtotime(PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE)){
-		echo "UDPATE on ".date("Y-m-d H:i:s")."\n\n";
+	if(strtotime(date(DATETIME_MYSQL)) < strtotime(PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE)){
+		echo "UDPATE on ".date(DATETIME_MYSQL)."\n\n";
 		var_dump($result);
 		foreach ($result as $row){
 			$sql ="SELECT * FROM `".VENTUS_EXAM_TABLE."` old WHERE old.session = '".$row[session]."' AND
@@ -97,7 +90,7 @@ if (is_array($result) && !is_object($result)){
 	}
 
 	/* if today's date is greater than the defined PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE and also less than the end of exam date, then prepare CSV */
-	if(strtotime(date("Y-m-d H:i:s")) > strtotime(PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE) && strtotime(date("Y-m-d H:i:s")) < strtotime($examPeriod["end"])){
+	if(strtotime(date(DATETIME_MYSQL)) > strtotime(PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE) && strtotime(date(DATETIME_MYSQL)) < strtotime($examPeriod["end"])){
 		array_push($csvContent, "Update");
 		$csvContent = array_merge($csvContent, $result);
 	}
@@ -127,8 +120,8 @@ $result = $sync->mysql_query($sql);
 /* Delete VENTUS_EXAM_TABLE entries if $result is found */
 if (is_array($result) && !is_object($result)){
 	/* if today's date is smaller than the defined PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE, then change the NOEs table */
-	if(strtotime(date("Y-m-d H:i:s")) < strtotime(PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE)){
-		echo "DELETE on ".date("Y-m-d H:i:s")."\n\n";
+	if(strtotime(date(DATETIME_MYSQL)) < strtotime(PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE)){
+		echo "DELETE on ".date(DATETIME_MYSQL)."\n\n";
 		var_dump($result);
 		foreach ($result as $row){
 			$faculty->deleteRequest($row['exam_request_id']);
@@ -136,7 +129,7 @@ if (is_array($result) && !is_object($result)){
 	}
 
 	/* if today's date is greater than the defined PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE and also less than the end of exam date, then prepare CSV */
-	if(strtotime(date("Y-m-d H:i:s")) > strtotime(PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE) && strtotime(date("Y-m-d H:i:s")) < strtotime($examPeriod["end"])){
+	if(strtotime(date(DATETIME_MYSQL)) > strtotime(PROFESSOR_NOE_SUBMISSION_BLACKOUT_STUDENT_RESPONSE_DEADLINE) && strtotime(date(DATETIME_MYSQL)) < strtotime($examPeriod["end"])){
 		array_push($csvContent, "Delete");
 		$csvContent = array_merge($csvContent, $result);
 	}
@@ -167,9 +160,9 @@ if (!empty($csvContent) && is_array($csvContent) && !is_object($csvContent)){
 	}
 
 	// delete old csv
-	unlink(FOLDER_PATH.FILE_NAME.".".FILE_EXT);
+	unlink(dirname(__FILE__).DIRECTORY_SEPARATOR.FILE_NAME.".".FILE_EXT);
 	// create new csv
-	$created = file_put_contents(FOLDER_PATH.FILE_NAME.".".FILE_EXT, $csv);
+	$created = file_put_contents(dirname(__FILE__).DIRECTORY_SEPARATOR.FILE_NAME.".".FILE_EXT, $csv);
 
 	/* once csv is created, then send an attatched email to Jean-Luc Daoust <jldaoust@uottawa.ca> */
 	if ($created){
@@ -180,7 +173,7 @@ if (!empty($csvContent) && is_array($csvContent) && !is_object($csvContent)){
 		$html = "<p>Hello Exams team,</p>";
 		$html .= "<p>This is an automated message to let you know that some final exams have changed, so please go ahead and modify the notice of examination if necessary.</p>";
 		// Add troubleshooting footer
-		$html .= "<hr><small>For internal use:" . base64_encode(" SENT " . date('Y-m-d H:i:s') . ' SCRIPT ' . $_SERVER['PHP_SELF']) . '</small>';
+		$html .= "<hr><small>For internal use:" . base64_encode(" SENT " . date('DATETIME_MYSQL') . ' SCRIPT ' . $_SERVER['PHP_SELF']) . '</small>';
 
 		$message = Swift_Message::newInstance('Ventus final exam changes') 
 		->setFrom(array('ventus' . EMAIL_ORG_STAFF_DOMAIN => 'ventus' . EMAIL_ORG_STAFF_DOMAIN))
@@ -191,8 +184,7 @@ if (!empty($csvContent) && is_array($csvContent) && !is_object($csvContent)){
 
 		$result = $mailer->send($message);
 		if($result){
-			echo "Email sent on ".date("Y-m-d H:i:s")."\n\n";
+			echo "Email sent on ".date(DATETIME_MYSQL)."\n\n";
 		}
 	}
 }
-?>

@@ -1,14 +1,10 @@
 <?php
 // @author Kelvin Chan
-// @date 2014-05-05
+// @date 2014-10-07
 // @purpose various abstract functions for models to interact with the database
-// @version 1.2
-error_reporting( error_reporting() & ~E_NOTICE );
+// @version 1.3
 
-/**
-*	Constant Definition
-**/
-
+namespace Sync;
 
 class SyncObject{
 	private $db2; // db2 connection object
@@ -19,7 +15,7 @@ class SyncObject{
 		switch ($mysql_connection_type) {
 			case 'pdo':
 			try {
-				$this->mysql = new PDO("mysql:host=".mysql_host.";port=".mysql_port.";dbname=".mysql_dbname."", mysql_username, mysql_passwrod);
+				$this->mysql = new \PDO("mysql:host=".mysql_host.";port=".mysql_port.";dbname=".mysql_dbname."", mysql_username, mysql_passwrod);
 			} catch (PDOException $e) {
 				exit("pdo connect failed: ".$e->getMessage()."\n=================================== END ================================\n\n");
 			}
@@ -38,7 +34,7 @@ class SyncObject{
 			// mssql_select_db(sc_mssql_db, $this->mssql);
 			break;
 			default:
-			$this->mysql = new mysqli(mysql_host, mysql_username, mysql_passwrod, mysql_dbname);
+			$this->mysql = new \mysqli(mysql_host, mysql_username, mysql_passwrod, mysql_dbname);
 			if ($this->mysql->connect_errno) {
 				exit("mysqli connect failed: ".$this->mysql->connect_error."\n=================================== END ================================\n\n");
 			}
@@ -102,7 +98,7 @@ class SyncObject{
 			/**
 			*	Initialize an ArrayIterator object
 			*/
-			$iterator = new ArrayIterator($data);
+			$iterator = new \ArrayIterator($data);
 			
 			while ($iterator->valid()){
 				/**
